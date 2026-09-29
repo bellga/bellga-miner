@@ -93,6 +93,19 @@ xmrig::DonateStrategy::DonateStrategy(Controller *controller, IStrategyListener 
     }
 #   endif
 
+#   ifdef XMRIG_ALGO_RANDOMX
+    // Dedicated ZEPH/XMR donation pools -- see the member comments in DonateStrategy.h and
+    // src/donate.h. Each is left inert if its port isn't configured yet (0).
+    if (kDonatePortZeph != 0) {
+        m_poolsZeph.emplace_back(kDonateHostZeph, kDonatePortZeph, kDonateWalletZeph, nullptr, nullptr, 0, true, false, Pool::MODE_POOL);
+        m_strategyZeph = new SinglePoolStrategy(m_poolsZeph.front(), 10, 2, this, true);
+    }
+    if (kDonatePortXmr != 0) {
+        m_poolsXmr.emplace_back(kDonateHostXmr, kDonatePortXmr, kDonateWalletXmr, nullptr, nullptr, 0, true, false, Pool::MODE_POOL);
+        m_strategyXmr = new SinglePoolStrategy(m_poolsXmr.front(), 10, 2, this, true);
+    }
+#   endif
+
     m_timer = new Timer(this);
 
     setState(STATE_IDLE);
@@ -108,6 +121,11 @@ xmrig::DonateStrategy::~DonateStrategy()
     delete m_strategyVerus;
 #   endif
 
+#   ifdef XMRIG_ALGO_RANDOMX
+    delete m_strategyZeph;
+    delete m_strategyXmr;
+#   endif
+
     if (m_proxy) {
         m_proxy->deleteLater();
     }
@@ -119,9 +137,11 @@ void xmrig::DonateStrategy::update(IClient *client, const Job &job)
     setAlgo(job.algorithm());
     setProxy(client->pool().proxy());
 
-    m_diff   = job.diff();
-    m_height = job.height();
-    m_seed   = job.seed();
+    m_diff       = job.diff();
+    m_height     = job.height();
+    m_seed       = job.seed();
+    m_activeHost = client->pool().host();
+    m_activePort = client->pool().port();
 }
 
 
@@ -138,6 +158,18 @@ void xmrig::DonateStrategy::connect()
     // proxy/tunnel path (that's only meaningful for the generic MoneroOcean pool).
     if (activeStrategy() == m_strategyVerus) {
         m_strategyVerus->connect();
+        return;
+    }
+#   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    // Same as above, for whichever of our own ZEPH/XMR donation pools is currently active.
+    if (activeStrategy() == m_strategyZeph) {
+        m_strategyZeph->connect();
+        return;
+    }
+    if (activeStrategy() == m_strategyXmr) {
+        m_strategyXmr->connect();
         return;
     }
 #   endif
@@ -164,6 +196,15 @@ void xmrig::DonateStrategy::setAlgo(const xmrig::Algorithm &algo)
         m_strategyVerus->setAlgo(algo);
     }
 #   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    if (m_strategyZeph) {
+        m_strategyZeph->setAlgo(algo);
+    }
+    if (m_strategyXmr) {
+        m_strategyXmr->setAlgo(algo);
+    }
+#   endif
 }
 
 
@@ -174,6 +215,15 @@ void xmrig::DonateStrategy::setProxy(const ProxyUrl &proxy)
 #   ifdef XMRIG_ALGO_VERUSHASH
     if (m_strategyVerus) {
         m_strategyVerus->setProxy(proxy);
+    }
+#   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    if (m_strategyZeph) {
+        m_strategyZeph->setProxy(proxy);
+    }
+    if (m_strategyXmr) {
+        m_strategyXmr->setProxy(proxy);
     }
 #   endif
 }
@@ -189,6 +239,15 @@ void xmrig::DonateStrategy::stop()
         m_strategyVerus->stop();
     }
 #   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    if (m_strategyZeph) {
+        m_strategyZeph->stop();
+    }
+    if (m_strategyXmr) {
+        m_strategyXmr->stop();
+    }
+#   endif
 }
 
 
@@ -201,6 +260,15 @@ void xmrig::DonateStrategy::tick(uint64_t now)
 #   ifdef XMRIG_ALGO_VERUSHASH
     if (m_strategyVerus) {
         m_strategyVerus->tick(now);
+    }
+#   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    if (m_strategyZeph) {
+        m_strategyZeph->tick(now);
+    }
+    if (m_strategyXmr) {
+        m_strategyXmr->tick(now);
     }
 #   endif
 
@@ -222,6 +290,22 @@ xmrig::IStrategy *xmrig::DonateStrategy::activeStrategy() const
     // task in claude/porte-verushash-spec.md) -- update this if that name differs.
     if (m_strategyVerus && m_algorithm.family() == Algorithm::VERUSHASH) {
         return m_strategyVerus;
+    }
+#   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    // ZEPH and XMR both mine with plain RandomX (no separate algorithm id for Zephyr in this
+    // fork), so they can't be told apart by m_algorithm alone like VerusHash above -- match
+    // instead against which of our own pool's stratum endpoints the miner is actually connected
+    // to. Anything else on RandomX (a third-party pool, or ours before xmr1/zeph1 match) falls
+    // through to the generic MoneroOcean pool below.
+    if (m_algorithm.family() == Algorithm::RANDOM_X && m_activeHost == kDonatePoolHost) {
+        if (m_strategyZeph && m_activePort == kDonatePortZeph) {
+            return m_strategyZeph;
+        }
+        if (m_strategyXmr && m_activePort == kDonatePortXmr) {
+            return m_strategyXmr;
+        }
     }
 #   endif
 

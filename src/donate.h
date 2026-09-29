@@ -45,26 +45,53 @@ constexpr const int kMinimumDonateLevel = 1;
 
 
 /*
- * kDonateWalletGeneric is used for the existing MoneroOcean multi-algo donation pool
- * (xmrig.moneroocean.stream), which is what handles donation for every algorithm this fork
- * already supports (RandomX, CryptoNight, KawPow, GhostRider, ...). It expects a wallet address
- * valid for whatever coin that pool pays out donations in (check the pool's docs) -- it is NOT
- * necessarily a VRSC address.
+ * Donation routing (this fork, bellga.tech era).
  *
- * kDonateWalletVerus / kDonateHostVerus / kDonatePortVerus are for a SEPARATE, dedicated VRSC
- * pool that donation connects to specifically when the miner is actively running VerusHash (the
- * MoneroOcean pool above does not know about VerusHash yet). Filled in from a real verusminer
- * config: `-o stratum+tcp://na.luckpool.net:3960 -u RQrN3fm7tgNoSHJ1Beu9YQ3Ds3kgPo47Vu.SsA15`.
- * The ".SsA15" suffix on the login is a worker/rig name (per luckpool's docs, not part of the
- * VRSC address itself) -- kept here so donation traffic is distinguishable as its own worker on
- * the pool dashboard; drop it (or change it) if that's not wanted. Port 3960 is luckpool's plain
- * stratum+tcp (non-TLS) port -- see net/strategies/DonateStrategy.cpp's VerusHash pool, which is
- * built with tls=false to match.
+ * Three coins are mined on our own pool (pool.bellga.tech, miningcore): VRSC (vrsc1, port 3960),
+ * ZEPH (zeph1, port 3961) and XMR (xmr1, port 3962). For those three, donation now goes to OUR
+ * OWN pool, paid in the SAME coin the user is actually mining -- see DonateStrategy.cpp's
+ * activeStrategy(), which picks the matching dedicated pool below.
+ *
+ * VRSC is unambiguous: it has its own algorithm family (Algorithm::VERUSHASH), so
+ * activeStrategy() can key off the algorithm alone.
+ *
+ * ZEPH and XMR are NOT distinguishable by algorithm -- Zephyr mines with plain RandomX (family
+ * RANDOM_X, same "rx/0" as Monero; this fork has no separate algorithm id for it, see
+ * Algorithm.h). So activeStrategy() disambiguates those two by which of our own pool's stratum
+ * endpoints (host+port) the miner is actually connected to, not by algorithm. A RandomX-family
+ * job on any OTHER pool (not pool.bellga.tech:3961/3962) falls through to the generic
+ * MoneroOcean pool below -- we have no way to know what coin a third-party RandomX pool pays in.
+ *
+ * kDonateWalletGeneric is used for the existing MoneroOcean multi-algo donation pool
+ * (xmrig.moneroocean.stream). This remains the fallback for every algorithm this fork supports
+ * that ISN'T one of our own three pool coins above (KawPow/RVN, GhostRider/RTM, other
+ * CryptoNight coins, RandomX on a pool other than ours, ...) -- standing up our own
+ * daemon+wallet-rpc+pool just to receive a sliver of donation hashpower for those isn't worth
+ * the infrastructure, so they keep going through MoneroOcean's pool, just paid to our own
+ * wallet now (an XMR address) instead of the placeholder that shipped here before.
  */
-constexpr const char *kDonateWalletGeneric = "89Qcz2NnSXtZf1NA5V8mt9DkswfbsN6HpaGaHbfnwwTuRwUDFVvgc7BZf1AKqPrmxzQktfB9hfLF8Znj8UwJxqFH4E5Nugc";
+constexpr const char *kDonateWalletGeneric = "49fnZSYNtodT6b533TbDjHEd8qRPzB9jpX5Z86DjSM3RL6Ytu171KGzegqdPR63xnvH5mtzgby5MwQsLAz61zUa3NsMRW9g";
+
+// Our own pool host, shared by the three dedicated donation pools below.
+constexpr const char *kDonatePoolHost      = "pool.bellga.tech";
+
+// VRSC (vrsc1) -- ".SsA15" is a worker/rig name (per luckpool's convention this address was
+// originally used with), kept so donation traffic shows as its own worker on the dashboard.
 constexpr const char *kDonateWalletVerus   = "RQrN3fm7tgNoSHJ1Beu9YQ3Ds3kgPo47Vu.SsA15";
-constexpr const char *kDonateHostVerus     = "na.luckpool.net";
+constexpr const char *kDonateHostVerus     = kDonatePoolHost;
 constexpr const uint16_t kDonatePortVerus  = 3960;
+
+// ZEPH (zeph1) -- reuses the pool's own fee wallet address (user's explicit choice; mixes fee
+// and donation income in the same wallet, simpler than minting a dedicated one).
+constexpr const char *kDonateWalletZeph    = "ZEPHYR3c37E83N46MoFbH8KVsz1vhLCYSAEPVc2M5DAdfuZL6Mjxvdcg6WsGtBG3pnEJp5yf4tcdJ58pCYxE7RAQG7aVoywQhuf4d";
+constexpr const char *kDonateHostZeph      = kDonatePoolHost;
+constexpr const uint16_t kDonatePortZeph   = 3961;
+
+// XMR (xmr1) -- pool not necessarily live yet (depends on monerod sync); wired up in advance so
+// donation starts working the moment xmr1 comes online, no code change needed then.
+constexpr const char *kDonateWalletXmr     = "49fnZSYNtodT6b533TbDjHEd8qRPzB9jpX5Z86DjSM3RL6Ytu171KGzegqdPR63xnvH5mtzgby5MwQsLAz61zUa3NsMRW9g";
+constexpr const char *kDonateHostXmr       = kDonatePoolHost;
+constexpr const uint16_t kDonatePortXmr    = 3962;
 
 
 #endif // XMRIG_DONATE_H

@@ -26,6 +26,7 @@
 #include "base/kernel/interfaces/ITimerListener.h"
 #include "base/net/stratum/Pool.h"
 #include "base/tools/Buffer.h"
+#include "base/tools/String.h"
 
 
 namespace xmrig {
@@ -110,13 +111,32 @@ private:
     uint64_t m_now                  = 0;
     uint64_t m_timestamp            = 0;
 
+    // Host/port of the pool the miner is CURRENTLY mining on (set from update(), which runs on
+    // every job from the real pool) -- used by activeStrategy() to tell our own zeph1/xmr1 pools
+    // apart, since they share an algorithm family (RandomX) and can't be told apart by algorithm
+    // alone. See src/donate.h.
+    String m_activeHost;
+    uint16_t m_activePort           = 0;
+
 #   ifdef XMRIG_ALGO_VERUSHASH
     // Dedicated donation pool used only while the miner is actively running VerusHash, since
     // the generic MoneroOcean donation pool above (m_pools/m_strategy) doesn't support it. See
-    // src/donate.h for the placeholder host/port/wallet this needs filled in, and
-    // DonateStrategy.cpp for the selection logic (activeStrategy()).
+    // src/donate.h for host/port/wallet, and DonateStrategy.cpp for the selection logic
+    // (activeStrategy()).
     IStrategy *m_strategyVerus      = nullptr;
     std::vector<Pool> m_poolsVerus;
+#   endif
+
+#   ifdef XMRIG_ALGO_RANDOMX
+    // Dedicated donation pools for ZEPH (zeph1) and XMR (xmr1), our own pool's other two coins.
+    // Both mine with plain RandomX, so unlike VerusHash above they can't be selected by
+    // algorithm family alone -- activeStrategy() picks between them (or falls through to the
+    // generic MoneroOcean pool) by matching m_activeHost/m_activePort against src/donate.h's
+    // kDonateHostZeph/kDonatePortZeph and kDonateHostXmr/kDonatePortXmr.
+    IStrategy *m_strategyZeph       = nullptr;
+    std::vector<Pool> m_poolsZeph;
+    IStrategy *m_strategyXmr        = nullptr;
+    std::vector<Pool> m_poolsXmr;
 #   endif
 };
 
