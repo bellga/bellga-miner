@@ -2625,7 +2625,34 @@ static llparse_state_t llhttp__internal__run(
         goto s_n_llhttp__internal__n_header_value_otherwise;
       }
       #endif  /* __SSE4_2__ */
-      #ifdef __ARM_NEON__
+      /* XMRIG PATCH (bellga/xmrig-vrsc): this NEON fast path is disabled on purpose.
+       *
+       * Reproduced and confirmed as a genuine GCC code-generation bug, not a logic bug in this
+       * (auto-generated, upstream llhttp) code: the exact sequence below -- vld1q_u8 + vceqq_u8/
+       * vcgeq_u8/vcleq_u8 + vandq_u16/vorrq_u16 (mixed with uint8x16_t operands, which is why this
+       * needs -flax-vector-conversions to compile at all, see cmake/flags.cmake's ARM branch) +
+       * vshrn_n_u16 + vget_lane_u64 -- computes the correct match_len on its OWN, e.g. called once
+       * from a plain function, but silently returns the wrong offset once it runs as this specific
+       * *loop*, on its second-or-later 16-byte iteration, at every GCC optimization level except -O0
+       * (confirmed on GCC 13.2/13.3, both arm-linux-gnueabihf/-march=armv7-a and aarch64-linux-gnu/
+       * -march=armv8-a -- this is not 32-bit-specific). An explicit vreinterpretq_u16_u8() in place
+       * of the implicit lax-conversion does not fix it either, so this is not simply the mixed-width
+       * intrinsic types -flax-vector-conversions was added for.
+       *
+       * In the field this showed up as XMRig's account-heartbeat/submit-benchmark HTTPS requests
+       * failing every time with "Invalid header value char" against a 100%-valid, standard HTTP
+       * response (confirmed byte-for-byte with a captured hex dump) -- llhttp's on_header_value span
+       * ending up at the wrong offset here is what produced that. Only this file's generic
+       * (non-Connection/Content-Length/Transfer-Encoding) header VALUE scanner uses this pattern
+       * (the only other #ifdef __ARM_NEON__ in this file is the top-of-file arm_neon.h include), so
+       * disabling just this one fast path is enough -- the plain byte-at-a-time loop directly below
+       * (the same one __SSE4_2__/__wasm_simd128__ builds fall back to already) is unaffected and
+       * confirmed correct at every optimization level.
+       *
+       * Define XMRIG_LLHTTP_TRUST_ARM_NEON_HEADER_SCAN (nowhere in this project by default) to
+       * re-enable this once it's been re-verified against whatever toolchain is in use.
+       */
+      #if defined(__ARM_NEON__) && defined(XMRIG_LLHTTP_TRUST_ARM_NEON_HEADER_SCAN)
       while (endp - p >= 16) {
         uint8x16_t input;
         uint8x16_t single;
@@ -2661,7 +2688,7 @@ static llparse_state_t llhttp__internal__run(
       if (p == endp) {
         return s_n_llhttp__internal__n_header_value;
       }
-      #endif  /* __ARM_NEON__ */
+      #endif  /* __ARM_NEON__ && XMRIG_LLHTTP_TRUST_ARM_NEON_HEADER_SCAN */
       #ifdef __wasm_simd128__
       while (endp - p >= 16) {
         v128_t input;
