@@ -17,7 +17,6 @@
  */
 
 #include <cassert>
-#include <cstdio>
 #include <thread>
 #include <mutex>
 
@@ -111,14 +110,7 @@ xmrig::CpuWorker<N>::CpuWorker(size_t id, const CpuLaunchData &data) :
 
 #   ifdef XMRIG_ALGO_VERUSHASH
     if (m_algorithm.family() == Algorithm::VERUSHASH) {
-        // XMRIG TEMP DIAGNOSTIC (remove once the Moto E7 Power / clang 21 Bus error is found):
-        // gdb can't attach under UserLAnd's proot (it's already the ptracer for everything in
-        // there, and a process can only have one), so pinpointing this by bisecting checkpoints
-        // is the only option left. fprintf+fflush directly to stderr, not the LOG_* macros --
-        // those buffer/format through more code than we want between "printed" and "crashed".
-        fprintf(stderr, "[DIAG] thread %zu: before verushash::create()\n", id); fflush(stderr);
         m_verusCtx = verushash::create();
-        fprintf(stderr, "[DIAG] thread %zu: after verushash::create(), ctx=%p\n", id, (void*)m_verusCtx); fflush(stderr);
     }
 #   endif
 }
@@ -280,9 +272,6 @@ bool xmrig::CpuWorker<N>::selfTest()
             0x57, 0x82, 0xb7, 0x15, 0xe4, 0x0c, 0x42, 0x74,
         };
 
-        // XMRIG TEMP DIAGNOSTIC -- see the matching comment in the constructor above.
-        fprintf(stderr, "[DIAG] thread %zu: selfTest building buffer, ctx=%p\n", id(), (void*)m_verusCtx); fflush(stderr);
-
         uint8_t buf[verushash::kInputSize];
         uint32_t state = 0x2b7e1516u;
         for (size_t i = 0; i < sizeof(buf); ++i) {
@@ -293,16 +282,9 @@ bool xmrig::CpuWorker<N>::selfTest()
         buf[141] = 0x40;
         buf[142] = 0x05;
 
-        fprintf(stderr, "[DIAG] thread %zu: buffer ready, calling verushash::hash()\n", id()); fflush(stderr);
-
         uint8_t out[32];
         verushash::hash(buf, sizeof(buf), out, m_verusCtx);
-
-        fprintf(stderr, "[DIAG] thread %zu: verushash::hash() returned\n", id()); fflush(stderr);
-
         verushash::invalidate(m_verusCtx); // don't let the test blob's cached state leak into mining
-
-        fprintf(stderr, "[DIAG] thread %zu: selfTest done\n", id()); fflush(stderr);
 
         return (N == 1) && memcmp(out, reference, 32) == 0;
     }

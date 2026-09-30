@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <mutex>
+#include <new>
 
 // verushash.cpp is the one file in this directory that didn't already have the ARM/x86 include
 // branch the rest of src/crypto/verushash/ inherited from monkins1010/ccminer's verus/ tree (see
@@ -170,14 +171,41 @@ inline void harakaKeyedFull(unsigned char *out, const unsigned char *in, const u
 
 struct Context
 {
+    // Custom operator new/delete: `alignas(16)` on blockhash_half below only actually gets
+    // 16-byte-aligned memory if the toolchain's implicit C++17 "aligned new" for over-aligned
+    // types works correctly -- confirmed broken on 32-bit ARM/clang (Ubuntu 26.04's clang 21):
+    // `new Context()` silently returned 8-byte-aligned (not 16) memory there, no error, no
+    // warning, and hash() later faulted with SIGBUS deep inside a SIMD load/store touching that
+    // misaligned buffer. Reproduced directly: forcing that exact 8-mod-16 misalignment on a
+    // Context in an otherwise identical build crashes the same way; a properly-16-aligned one
+    // doesn't. posix_memalign sidesteps the question entirely instead of trusting the platform's
+    // default-new-alignment machinery.
+    static void *operator new(size_t size)
+    {
+        void *ptr = nullptr;
+        if (posix_memalign(&ptr, 16, size) != 0) {
+            throw std::bad_alloc();
+        }
+
+        return ptr;
+    }
+
+
+    static void operator delete(void *ptr)
+    {
+        free(ptr);
+    }
+
+
     u128 *data_key         = nullptr; // kAllocBytes worth: key table + two restore-scratch regions
     u128 *data_key_prand   = nullptr; // == data_key + kKeyEntries128
     u128 *data_key_prandex = nullptr; // == data_key + kKeyEntries128 + 32
 
     // 16-byte alignment is enough: this buffer is only ever memcpy'd, never accessed as a SIMD
     // register directly (the per-nonce __m128i work happens on the stack-local `curBuf` in
-    // hash() below, which the compiler aligns itself). Using alignas(32) here would require
-    // matching overaligned heap allocation for `Context`, which plain `new` does not guarantee.
+    // hash() below, which the compiler aligns itself). Using alignas(32) here would need the
+    // same custom operator new above updated to match (posix_memalign's alignment argument),
+    // which is easy, but there's no current reason for this buffer to need more than 16.
     alignas(16) uint8_t blockhash_half[64] = { 0 };
     uint8_t cachedPrefix[kNonceOffset]     = { 0 }; // last-seen fixed (non-nonce) part of the blob
     bool    havePrefix                     = false;
