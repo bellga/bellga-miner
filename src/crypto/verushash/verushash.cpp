@@ -19,6 +19,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 
 // verushash.cpp is the one file in this directory that didn't already have the ARM/x86 include
 // branch the rest of src/crypto/verushash/ inherited from monkins1010/ccminer's verus/ tree (see
@@ -195,7 +196,16 @@ struct Context
 
 Context *create()
 {
-    load_constants();
+    // load_constants() writes to haraka.c's rc[40], a process-wide global -- not per-Context,
+    // not thread-local. CpuWorker creates one Context per mining thread, all at startup, so
+    // without this every thread would race to write it concurrently. Each write happens to store
+    // the same fixed constants regardless of which thread does it, so this was never seen to
+    // produce a wrong hash, but it's still a real data race (UB, and exactly the kind of thing
+    // that can crash under a different compiler's codegen for the store even when the values
+    // themselves can't disagree) -- std::call_once makes it what it always should have been: a
+    // one-time, thread-safe initialization no matter how many Contexts get created concurrently.
+    static std::once_flag constantsOnce;
+    std::call_once(constantsOnce, load_constants);
 
     auto *ctx = new Context();
     ctx->data_key = static_cast<u128 *>(malloc(kAllocBytes));
