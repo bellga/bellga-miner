@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# termux-build.sh -- build xmrig-vrsc natively on-device for Termux or UserLAnd (ARM64/ARMv7),
+# termux-build.sh -- build the Bellga miner natively on-device for Termux or UserLAnd (ARM64/ARMv7),
 # with automatic per-core tuning (see cmake/arm-cpu-tiers.cmake, step 2 of the mobile/ARM work).
 #
 # This is step 3 of the mobile/ARM support work documented in the project's
@@ -18,14 +18,23 @@
 #
 # NOT validated on a real device or inside a real Termux/UserLAnd userland -- this was written
 # and reviewed in a cloud sandbox with no ARM/Android hardware available. The CPU-detection table
-# below is best-effort (see the comment above it); the actual xmrig build+run needs to be
+# below is best-effort (see the comment above it); the actual build+run needs to be
 # confirmed on-device. Please paste back the output if something looks wrong.
 
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/bellga/xmrig-vrsc.git}"
+REPO_URL="${REPO_URL:-https://github.com/bellga/bellga-miner.git}"
 REPO_REF="${REPO_REF:-master}"
-BUILD_DIR="${BUILD_DIR:-$HOME/xmrig-vrsc}"
+# The project was called xmrig-vrsc before it became Bellga. If an old checkout
+# is there and no new one exists yet, keep using it (its remote gets pointed at
+# the new URL below) instead of cloning everything again.
+if [ -z "${BUILD_DIR:-}" ]; then
+    if [ ! -e "$HOME/bellga-miner" ] && [ -d "$HOME/xmrig-vrsc/.git" ]; then
+        BUILD_DIR="$HOME/xmrig-vrsc"
+    else
+        BUILD_DIR="$HOME/bellga-miner"
+    fi
+fi
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 2)}"
 ARM_CPU_OVERRIDE="${1:-${ARM_CPU:-}}"
 
@@ -240,7 +249,7 @@ fi
 # ---------------------------------------------------------------------------
 # 4. Clone or update
 # ---------------------------------------------------------------------------
-# BUILD_DIR defaults to $HOME/xmrig-vrsc -- the same directory the README tells
+# BUILD_DIR defaults to $HOME/bellga-miner (or an old $HOME/xmrig-vrsc checkout) -- the same directory the README tells
 # people to `mkdir` and `cd` into before downloading this script (so the file
 # can be fetched with a plain relative-path curl/chmod/run). That means on a
 # first run BUILD_DIR usually already exists and already contains
@@ -252,6 +261,7 @@ fi
 # tracked paths.
 if [ -d "$BUILD_DIR/.git" ]; then
     log "Existing checkout found at $BUILD_DIR, updating..."
+    git -C "$BUILD_DIR" remote set-url origin "$REPO_URL"
     git -C "$BUILD_DIR" fetch origin "$REPO_REF"
     git -C "$BUILD_DIR" checkout "$REPO_REF"
     git -C "$BUILD_DIR" pull --ff-only origin "$REPO_REF"
@@ -303,10 +313,17 @@ cmake -S "$BUILD_DIR" -B "$BUILD_SUBDIR" "${CMAKE_ARGS[@]}"
 log "Building with $JOBS job(s)..."
 cmake --build "$BUILD_SUBDIR" -j "$JOBS"
 
-BIN="$BUILD_SUBDIR/xmrig"
+BIN="$BUILD_SUBDIR/bellga"
 [ -x "$BIN" ] || die "Build finished but $BIN wasn't produced -- check the log above."
+
+# Builds made before the rename left an 'xmrig' binary here. Replace it with a
+# link to the new one so old run scripts keep working and never start a stale build.
+if [ -e "$BUILD_SUBDIR/xmrig" ] || [ -L "$BUILD_SUBDIR/xmrig" ]; then
+    rm -f "$BUILD_SUBDIR/xmrig"
+fi
+ln -s bellga "$BUILD_SUBDIR/xmrig"
 
 log "Build finished: $BIN"
 "$BIN" --version || warn "Built binary exists but --version failed to run -- please paste this script's full output back."
 
-log "Done. Tier used: ${RESOLVED_ARM_CPU:-<generic ARMv8-A+crypto>}. Next: copy/adapt config.json and run-xmrig.sh next to this binary, or run '$BIN -c config.json' directly."
+log "Done. Tier used: ${RESOLVED_ARM_CPU:-<generic ARMv8-A+crypto>}. Next: copy/adapt config.json (build one at https://bellga.tech/config.html) and run-bellga.sh next to this binary, or run '$BIN -c config.json' directly."

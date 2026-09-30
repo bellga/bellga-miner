@@ -49,7 +49,7 @@ namespace xmrig {
 
 static int showVersion()
 {
-    printf(APP_NAME " " APP_VERSION "\n built on " __DATE__
+    printf(APP_NAME " " APP_VERSION " (based on " APP_BASE_NAME " " APP_BASE_VERSION ")\n built on " __DATE__
 
 #   if defined(__clang__)
     " with clang " __clang_version__);

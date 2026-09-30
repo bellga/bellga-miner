@@ -1,28 +1,27 @@
-# XMRig
+# Bellga Miner
 
-[![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig/total.svg)](https://github.com/xmrig/xmrig/releases)
-[![GitHub release](https://img.shields.io/github/release/xmrig/xmrig/all.svg)](https://github.com/xmrig/xmrig/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date/xmrig/xmrig.svg)](https://github.com/xmrig/xmrig/releases)
-[![GitHub license](https://img.shields.io/github/license/xmrig/xmrig.svg)](https://github.com/xmrig/xmrig/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/xmrig/xmrig.svg)](https://github.com/xmrig/xmrig/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/xmrig/xmrig.svg)](https://github.com/xmrig/xmrig/network)
+High-performance CPU miner for **VRSC** (VerusHash 2.2), **ZEPH** and **XMR**
+(RandomX), built and tuned for [bellga.tech](https://bellga.tech) and its pool
+(`pool.bellga.tech`: VRSC 3960, ZEPH 3961, XMR 3962) -- but it mines on any
+compatible pool.
 
-XMRig is a high performance, open source, cross platform RandomX, KawPow, CryptoNight and [GhostRider](https://github.com/xmrig/xmrig/tree/master/src/crypto/ghostrider#readme) unified CPU/GPU miner and [RandomX benchmark](https://xmrig.com/benchmark). Official binaries are available for Windows, Linux, macOS and FreeBSD.
+Bellga is a fork of [XMRig](https://github.com/xmrig/xmrig) 6.26.0
+(GPL-3.0-or-later), with the VerusHash core ported from
+[monkins1010/ccminer](https://github.com/monkins1010/ccminer). All the XMRig
+algorithms (RandomX, KawPow, CryptoNight, GhostRider) are still here, as are
+XMRig's config format and command-line options -- only the name changed:
+the executable is now `bellga` (`bellga.exe` on Windows).
 
-## Mining backends
-- **CPU** (x86/x64/ARMv7/ARMv8/RISC-V)
-- **OpenCL** for AMD GPUs.
-- **CUDA** for NVIDIA GPUs via external [CUDA plugin](https://github.com/xmrig/xmrig-cuda).
+* **Config builder:** https://bellga.tech/config.html
+* **CPU catalog, optimizations and roadmap:** https://bellga.tech/minerador.html
+* **Pool stats:** https://bellga.tech/stats.html
 
-## Download
-* **[Binary releases](https://github.com/xmrig/xmrig/releases)**
-* **[Build from source](https://xmrig.com/docs/miner/build)**
-
-## Usage
-The preferred way to configure the miner is the [JSON config file](https://xmrig.com/docs/miner/config) as it is more flexible and human friendly. The [command line interface](https://xmrig.com/docs/miner/command-line-options) does not cover all features, such as mining profiles for different algorithms. Important options can be changed during runtime without miner restart by editing the config file or executing [API](https://xmrig.com/docs/miner/api) calls.
-
-* **[Wizard](https://xmrig.com/wizard)** helps you create initial configuration for the miner.
-* **[Workers](http://workers.xmrig.info)** helps manage your miners via HTTP API.
+### Coming from xmrig-vrsc?
+Same code, new name. `config.json` works unchanged. The repository moved to
+`bellga/bellga-miner` (GitHub redirects the old URL). Re-running
+`./termux-build.sh` updates an existing `~/xmrig-vrsc` checkout in place and
+leaves an `xmrig` link pointing to the new `bellga` binary, so old run
+scripts keep working.
 
 ## VerusHash (VRSC)
 This fork adds VerusHash 2.2 support for mining VRSC (Verus Coin), ported from
@@ -39,7 +38,7 @@ on an Android device via [Termux](https://termux.dev) or
 needed, just copy-paste this into the terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bellga/xmrig-vrsc/master/termux-build.sh -o termux-build.sh
+curl -fsSL https://raw.githubusercontent.com/bellga/bellga-miner/master/termux-build.sh -o termux-build.sh
 chmod +x termux-build.sh
 ./termux-build.sh
 ```
@@ -90,14 +89,15 @@ Run the offline CPU hash suite without pool, API, or miner network dependencies:
 The script builds the standalone hash-test binary and runs both the regular known-answer suite and the full RandomX mode checks.
 
 ## Donations
-* Default donation 1% (1 minute in 100 minutes) can be increased via option `donate-level` or disabled in source code.
+* Default donation 5% (5 minutes in 100), adjustable with the `donate-level` option down to a minimum of 1%.
+* When you mine VRSC, ZEPH or XMR, the donation minute goes to `pool.bellga.tech` in the same coin; other algorithms fall back to MoneroOcean.
 * XMR: `89Qcz2NnSXtZf1NA5V8mt9DkswfbsN6HpaGaHbfnwwTuRwUDFVvgc7BZf1AKqPrmxzQktfB9hfLF8Znj8UwJxqFH4E5Nugc`
 
-## Developers
-* **[xmrig](https://github.com/xmrig)**
+## Credits
+* **[xmrig](https://github.com/xmrig)** -- upstream XMRig
 * **[sech1](https://github.com/SChernykh)**
 
 ## Contacts
-* support@xmrig.com
-* [reddit](https://www.reddit.com/user/XMRig/)
-* [twitter](https://twitter.com/xmrig_dev)
+* Site: https://bellga.tech
+* Issues: https://github.com/bellga/bellga-miner/issues
+* Upstream XMRig: support@xmrig.com

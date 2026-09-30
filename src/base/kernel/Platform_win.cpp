@@ -66,12 +66,14 @@ char *xmrig::Platform::createUserAgent()
 #   endif
 
 #   ifdef __clang__
-    snprintf(buf + length, max - length, " clang/%d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
+    length += snprintf(buf + length, max - length, " clang/%d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
 #   elif defined(__GNUC__)
-    snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+    length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #   elif _MSC_VER
-    snprintf(buf + length, max - length, " msvc/%d", MSVC_VERSION);
+    length += snprintf(buf + length, max - length, " msvc/%d", MSVC_VERSION);
 #   endif
+
+    snprintf(buf + length, max - length, " " APP_BASE_NAME "/" APP_BASE_VERSION);
 
     return buf;
 }

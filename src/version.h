@@ -8,19 +8,23 @@
 #ifndef XMRIG_VERSION_H
 #define XMRIG_VERSION_H
 
-#define APP_ID        "xmrig"
-#define APP_NAME      "XMRig"
-#define APP_DESC      "XMRig miner"
-// MoneroOcean: mark this runtime fork build distinctly from upstream XMRig.
-#define APP_VERSION   "6.26.0-VRSC"
-// End MoneroOcean
-#define APP_DOMAIN    "xmrig.com"
-#define APP_SITE      "www.xmrig.com"
-#define APP_COPYRIGHT "Copyright (C) 2016-2026 xmrig.com"
+#define APP_ID        "bellga"
+#define APP_NAME      "Bellga"
+#define APP_DESC      "Bellga miner (based on XMRig)"
+#define APP_VERSION   "1.0.0"
+// Bellga is a fork of XMRig (GPL-3.0-or-later). The upstream version it is
+// based on is shown next to our own version (--version, startup banner) and
+// appended to the stratum user agent as "XMRig/<ver>" so pools that parse
+// the agent for XMRig feature detection keep working.
+#define APP_BASE_NAME    "XMRig"
+#define APP_BASE_VERSION "6.26.0"
+#define APP_DOMAIN    "bellga.tech"
+#define APP_SITE      "bellga.tech"
+#define APP_COPYRIGHT "Copyright (C) 2026 bellga.tech, 2016-2026 xmrig.com"
 #define APP_KIND      "miner"
 
-#define APP_VER_MAJOR  6
-#define APP_VER_MINOR  26
+#define APP_VER_MAJOR  1
+#define APP_VER_MINOR  0
 #define APP_VER_PATCH  0
 
 #ifdef _MSC_VER

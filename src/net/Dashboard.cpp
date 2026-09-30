@@ -295,7 +295,7 @@ void xmrig::Dashboard::render()
     }();
 
     lines.push_back(std::string(c(CYAN_BOLD_S)) + rule + c(CLEAR));
-    lines.push_back(std::string(c(WHITE_BOLD_S)) + " xmrig-vrsc" + c(CLEAR) + " " + c(CYAN_S) + "\xE2\x80\x94 " + m_algo + c(CLEAR));
+    lines.push_back(std::string(c(WHITE_BOLD_S)) + " Bellga" + c(CLEAR) + " " + c(CYAN_S) + "\xE2\x80\x94 " + m_algo + c(CLEAR));
     lines.push_back(std::string(c(CYAN_BOLD_S)) + rule + c(CLEAR));
 
     lines.push_back(" " + padRight("ABOUT", 11) + m_about);

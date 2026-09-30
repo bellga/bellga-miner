@@ -66,6 +66,8 @@ char *xmrig::Platform::createUserAgent()
     length += snprintf(buf + length, max - length, " gcc/%d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #   endif
 
+    snprintf(buf + length, max - length, " " APP_BASE_NAME "/" APP_BASE_VERSION);
+
     return buf;
 }
 
