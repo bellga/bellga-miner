@@ -1,8 +1,8 @@
 # Bellga Miner
 
 High-performance CPU miner for **VRSC** (VerusHash 2.2), **ZEPH** and **XMR**
-(RandomX), built and tuned for [bellga.tech](https://bellga.tech) and its pool
-(`pool.bellga.tech`: VRSC 3960, ZEPH 3961, XMR 3962) -- but it mines on any
+(RandomX), built and tuned for [bellga.online](https://bellga.online) and its pool
+(`pool.bellga.online`: VRSC 3960, ZEPH 3961, XMR 3962) -- but it mines on any
 compatible pool.
 
 Bellga is a fork of [XMRig](https://github.com/xmrig/xmrig) 6.26.0
@@ -12,9 +12,9 @@ algorithms (RandomX, KawPow, CryptoNight, GhostRider) are still here, as are
 XMRig's config format and command-line options -- only the name changed:
 the executable is now `bellga` (`bellga.exe` on Windows).
 
-* **Config builder:** https://bellga.tech/config.html
-* **CPU catalog, optimizations and roadmap:** https://bellga.tech/minerador.html
-* **Pool stats:** https://bellga.tech/stats.html
+* **Config builder:** https://bellga.online/config.html
+* **CPU catalog, optimizations and roadmap:** https://bellga.online/minerador.html
+* **Pool stats:** https://bellga.online/stats.html
 
 ### Coming from xmrig-vrsc?
 Same code, new name. `config.json` works unchanged. The repository moved to
@@ -90,7 +90,7 @@ The script builds the standalone hash-test binary and runs both the regular know
 
 ## Donations
 * Default donation 5% (5 minutes in 100), adjustable with the `donate-level` option down to a minimum of 1%.
-* When you mine VRSC, ZEPH or XMR, the donation minute goes to `pool.bellga.tech` in the same coin; other algorithms fall back to MoneroOcean.
+* When you mine VRSC, ZEPH or XMR, the donation minute goes to `pool.bellga.online` in the same coin; other algorithms fall back to MoneroOcean.
 * XMR: `89Qcz2NnSXtZf1NA5V8mt9DkswfbsN6HpaGaHbfnwwTuRwUDFVvgc7BZf1AKqPrmxzQktfB9hfLF8Znj8UwJxqFH4E5Nugc`
 
 ## Credits
@@ -98,6 +98,6 @@ The script builds the standalone hash-test binary and runs both the regular know
 * **[sech1](https://github.com/SChernykh)**
 
 ## Contacts
-* Site: https://bellga.tech
+* Site: https://bellga.online
 * Issues: https://github.com/bellga/bellga-miner/issues
 * Upstream XMRig: support@xmrig.com

@@ -45,9 +45,9 @@ constexpr const int kMinimumDonateLevel = 1;
 
 
 /*
- * Donation routing (this fork, bellga.tech era).
+ * Donation routing (this fork, bellga.online era).
  *
- * Three coins are mined on our own pool (pool.bellga.tech, miningcore): VRSC (vrsc1, port 3960),
+ * Three coins are mined on our own pool (pool.bellga.online, miningcore): VRSC (vrsc1, port 3960),
  * ZEPH (zeph1, port 3961) and XMR (xmr1, port 3962). For those three, donation now goes to OUR
  * OWN pool, paid in the SAME coin the user is actually mining -- see DonateStrategy.cpp's
  * activeStrategy(), which picks the matching dedicated pool below.
@@ -59,7 +59,7 @@ constexpr const int kMinimumDonateLevel = 1;
  * RANDOM_X, same "rx/0" as Monero; this fork has no separate algorithm id for it, see
  * Algorithm.h). So activeStrategy() disambiguates those two by which of our own pool's stratum
  * endpoints (host+port) the miner is actually connected to, not by algorithm. A RandomX-family
- * job on any OTHER pool (not pool.bellga.tech:3961/3962) falls through to the generic
+ * job on any OTHER pool (not pool.bellga.online:3961/3962) falls through to the generic
  * MoneroOcean pool below -- we have no way to know what coin a third-party RandomX pool pays in.
  *
  * kDonateWalletGeneric is used for the existing MoneroOcean multi-algo donation pool
@@ -73,7 +73,7 @@ constexpr const int kMinimumDonateLevel = 1;
 constexpr const char *kDonateWalletGeneric = "49fnZSYNtodT6b533TbDjHEd8qRPzB9jpX5Z86DjSM3RL6Ytu171KGzegqdPR63xnvH5mtzgby5MwQsLAz61zUa3NsMRW9g";
 
 // Our own pool host, shared by the three dedicated donation pools below.
-constexpr const char *kDonatePoolHost      = "pool.bellga.tech";
+constexpr const char *kDonatePoolHost      = "pool.bellga.online";
 
 // VRSC (vrsc1) -- ".SsA15" is a worker/rig name (per luckpool's convention this address was
 // originally used with), kept so donation traffic shows as its own worker on the dashboard.

@@ -18,9 +18,9 @@
 // the agent for XMRig feature detection keep working.
 #define APP_BASE_NAME    "XMRig"
 #define APP_BASE_VERSION "6.26.0"
-#define APP_DOMAIN    "bellga.tech"
-#define APP_SITE      "bellga.tech"
-#define APP_COPYRIGHT "Copyright (C) 2026 bellga.tech, 2016-2026 xmrig.com"
+#define APP_DOMAIN    "bellga.online"
+#define APP_SITE      "bellga.online"
+#define APP_COPYRIGHT "Copyright (C) 2026 bellga.online, 2016-2026 xmrig.com"
 #define APP_KIND      "miner"
 
 #define APP_VER_MAJOR  1

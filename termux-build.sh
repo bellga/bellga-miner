@@ -326,4 +326,4 @@ ln -s bellga "$BUILD_SUBDIR/xmrig"
 log "Build finished: $BIN"
 "$BIN" --version || warn "Built binary exists but --version failed to run -- please paste this script's full output back."
 
-log "Done. Tier used: ${RESOLVED_ARM_CPU:-<generic ARMv8-A+crypto>}. Next: copy/adapt config.json (build one at https://bellga.tech/config.html) and run-bellga.sh next to this binary, or run '$BIN -c config.json' directly."
+log "Done. Tier used: ${RESOLVED_ARM_CPU:-<generic ARMv8-A+crypto>}. Next: copy/adapt config.json (build one at https://bellga.online/config.html) and run-bellga.sh next to this binary, or run '$BIN -c config.json' directly."
